@@ -1,7 +1,7 @@
 
 
 # ファイル名の抽出と処理
-for file in ../database/clinvar_*.hg19.recode2.vcf.gz; do
+for file in /mnt/c/database/clinvar_*.hg19.recode2.vcf.gz; do
   # * の部分（数字列）を抽出
   date=$(basename $file | sed -E 's/clinvar_(.*)\.hg19.recode2\.vcf\.gz/\1/')
 
@@ -10,15 +10,15 @@ for file in ../database/clinvar_*.hg19.recode2.vcf.gz; do
     echo "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar_${date}.vcf.gz が存在しません。ダウンロードを実行します。"
     # ダウンロードを実行
     latest_file=$(curl -s https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/ | grep -oP 'clinvar_\d+\.vcf\.gz' | sort -r | head -n 1)
-    wget -c "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/$latest_file" -P ../database
-    rm ../database/clinvar_${date}.hg19.recode2.vcf.gz ../database/clinvar_${date}.hg19.recode2.vcf.gz.tbi
+    wget -c "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/$latest_file" -P /mnt/c/database
+    rm /mnt/c/database/clinvar_${date}.hg19.recode2.vcf.gz /mnt/c/database/clinvar_${date}.hg19.recode2.vcf.gz.tbi
     
     filename_base=$(echo "$latest_file" | sed 's/\.vcf\.gz//')
-    vcftools --gzvcf ../database/$latest_file --recode --out ../database/$filename_base.hg19 --recode-INFO AF_ESP --recode-INFO AF_EXAC --recode-INFO AF_TGP --recode-INFO CLNSIG --recode-INFO CLNSIGCONF --recode-INFO SCI --recode-INFO ONC
-    sed '9,15d' ../database/$filename_base.hg19.recode.vcf | sed '11,22d' | sed '12,22d' | sed '13,14d' > ../database/$filename_base.hg19.recode2.vcf
-    bgzip -@ 24 ../database/$filename_base.hg19.recode2.vcf
-    tabix -p vcf ../database/$filename_base.hg19.recode2.vcf.gz
-    rm ../database/$filename_base.vcf.gz ../database/$filename_base.hg19.recode.vcf ../database/$filename_base.hg19.log
+    vcftools --gzvcf /mnt/c/database/$latest_file --recode --out /mnt/c/database/$filename_base.hg19 --recode-INFO AF_ESP --recode-INFO AF_EXAC --recode-INFO AF_TGP --recode-INFO CLNSIG --recode-INFO CLNSIGCONF --recode-INFO SCI --recode-INFO ONC
+    sed '9,15d' /mnt/c/database/$filename_base.hg19.recode.vcf | sed '11,22d' | sed '12,22d' | sed '13,14d' > /mnt/c/database/$filename_base.hg19.recode2.vcf
+    bgzip -@ 24 /mnt/c/database/$filename_base.hg19.recode2.vcf
+    tabix -p vcf /mnt/c/database/$filename_base.hg19.recode2.vcf.gz
+    rm /mnt/c/database/$filename_base.vcf.gz /mnt/c/database/$filename_base.hg19.recode.vcf /mnt/c/database/$filename_base.hg19.log
     
   else
     echo "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar_${date}.vcf.gz は既に存在しています。"
@@ -121,10 +121,10 @@ awk -F"\t" -v "OFS=\t" '{print $1}' short-variant_tr.change2.combined4.tsv | awk
 awk -F"\t" -v "OFS=\t" '{print $1}' short-variant_tr.change2.combined4.tsv | awk -F":" -v "OFS=\t" '{print $2}' | awk -F"_" -v "OFS=\t" '{print $3}' | sed -e '1d' > short-variant_tr.change2.combined4.ALT.tsv
 paste short-variant_tr.change2.combined4.chr.tsv short-variant_tr.change2.combined4.pos.tsv short-variant_tr.change2.combined4.REF.tsv short-variant_tr.change2.combined4.ALT.tsv > short-variant_tr.change2.combined5.tsv
 awk -F"\t" -v "OFS=\t" '{print $1,$2,".",$3,$4,".",".",".","."}' short-variant_tr.change2.combined5.tsv > short-variant_tr.change2.combined6.tsv
-cat ../database/vcf_head2.tsv <(awk -F"\t" -v "OFS=\t" '{print $1, $2, ".", $4, $5, ".", ".", ".", "GT:DP", "0|1:100"}' short-variant_tr.change2.combined6.tsv) > short-variant_tr.change2.combined6.vcf
+cat /mnt/c/database/vcf_head2.tsv <(awk -F"\t" -v "OFS=\t" '{print $1, $2, ".", $4, $5, ".", ".", ".", "GT:DP", "0|1:100"}' short-variant_tr.change2.combined6.tsv) > short-variant_tr.change2.combined6.vcf
 awk -F"," -v "OFS=," '$0 !~/-/ {print $0}' short-variant_tr.change2.combined6.vcf > short-variant_tr.change2.combined6_2.vcf
 awk -F"," -v "OFS=\t" '{print $13,$7}' short-variant_tr.csv | sed -e '1d' | sort > short-variant_tr.refseq.tsv
-join -t "$(printf '\011')" -a 1 -1 1 -2 1 -e "." -o auto short-variant_tr.refseq.tsv ../database/Refseq_ENST.tsv > short-variant_tr.refseq.join.tsv
+join -t "$(printf '\011')" -a 1 -1 1 -2 1 -e "." -o auto short-variant_tr.refseq.tsv /mnt/c/database/Refseq_ENST.tsv > short-variant_tr.refseq.join.tsv
 
 # 対応するENST numberのないものがあるか
 blank_number=`cat short-variant_tr.refseq.join.tsv | awk -F"\t" -v "OFS=\t" '$3=="." {print $0}' | wc -l`
@@ -135,7 +135,7 @@ fi
 cat short-variant_tr.change2.combined6_2.vcf | awk '$1 ~ /^#/ {print $0;next} {print $0 | "sort -k1,1 -k2,2n"}' > short-variant_tr.change2.combined6_3.vcf
 bgzip short-variant_tr.change2.combined6_3.vcf
 tabix -p vcf short-variant_tr.change2.combined6_3.vcf.gz
-bcftools norm -f ../database/hg19.fa -o short-variant_tr.change2.combined6_4.vcf short-variant_tr.change2.combined6_3.vcf.gz
+bcftools norm -f /mnt/c/database/hg19.fa -o short-variant_tr.change2.combined6_4.vcf short-variant_tr.change2.combined6_3.vcf.gz
 awk -F"\t" -v "OFS=\t" '{gsub("c","C",$4);gsub("g","G",$4);gsub("t","T",$4);gsub("a","A",$4);gsub("c","C",$5);gsub("g","G",$5);gsub("t","T",$5);gsub("a","A",$5);print $0}' short-variant_tr.change2.combined6_4.vcf > short-variant_tr.change2.combined6_5.vcf
 bgzip -d short-variant_tr.change2.combined6_3.vcf.gz
 
@@ -144,22 +144,22 @@ cat short-variant_tr.refseq.join.tsv | cut -f 3 | sort | uniq > annotation_ENST.
 cat annotation_ENST.tsv | awk -F"\t" -v "OFS=\t" '{gsub("ENST00000675843","ENST00000278616",$1);gsub("ENST00000647874","ENST00000319144",$1);gsub("ENST00000452863","ENST00000332351",$1);gsub("ENST00000355498","ENST00000372115",$1);gsub("ENST00000650905","ENST00000396334",$1);gsub("ENST00000651671","ENST00000277541",$1);gsub("ENST00000650285","ENST00000268035",$1);gsub("ENST00000673466","ENST00000336199",$1);gsub("ENST00000674063","ENST00000477593",$1);gsub("ENST00000398755","ENST00000417220",$1);gsub("ENST00000621592","ENST00000377970",$1);gsub("ENST00000646891","ENST00000288602",$1);print $0}' > annotation_ENST2.tsv
 java -jar ../snpEff/snpEff.jar -onlyTr annotation_ENST2.tsv GRCh37.87 short-variant_tr.change2.combined6_5.vcf > short-variant_tr.change2.combined6.snpeff.vcf
 cat short-variant_tr.change2.combined6.snpeff.vcf | awk '$1 ~ /^#/ {print $0;next} {print $0 | "sort -k1,1 -k2,2n"}' > short-variant_tr.change2.combined6.snpeff.sort.vcf
-java -Xms10g -Xmx30g -jar ../snpEff/SnpSift.jar annotate ../database/clinvar_*.hg19.recode2.vcf.gz short-variant_tr.change2.combined6.snpeff.sort.vcf | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-54kjpn-GRCh37-af2.sort.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-38kjpn-GRCh37-af2.sort.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-14kjpn-GRCh37-af2.sort.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-8.3kjpn-20200831-af2.sort.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.exomes.r2.1.1.sites.recode2.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.genomes.r2.1.1.sites.all.recode2.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.genomes.v3.1.2.sites.all.recode2.hg19.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.exomes.v4.1.sites.all.recode2.hg19.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.genomes.v4.1.sites.all.recode2.hg19.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/BBJ_RIKEN_TMM_20200309_all2.sort.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/GCF_000001405.25.recode2.norm2.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/CosmicCodingMuts.normal.v99.recode2.variants.uniq.sort.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/CosmicNonCodingVariants.normal.v99.recode2.variants.uniq.sort.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/all.frequency.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/MGeND.recode2.norm2.vcf.gz > short-variant_tr.change2.combined6.snpeff.sort.annotate.vcf
+java -Xms10g -Xmx30g -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/clinvar_*.hg19.recode2.vcf.gz short-variant_tr.change2.combined6.snpeff.sort.vcf | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-54kjpn-GRCh37-af2.sort.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-38kjpn-GRCh37-af2.sort.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-14kjpn-GRCh37-af2.sort.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-8.3kjpn-20200831-af2.sort.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.exomes.r2.1.1.sites.recode2.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.genomes.r2.1.1.sites.all.recode2.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.genomes.v3.1.2.sites.all.recode2.hg19.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.exomes.v4.1.sites.all.recode2.hg19.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.genomes.v4.1.sites.all.recode2.hg19.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/BBJ_RIKEN_TMM_20200309_all2.sort.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/GCF_000001405.25.recode2.norm2.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/CosmicCodingMuts.normal.v99.recode2.variants.uniq.sort.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/CosmicNonCodingVariants.normal.v99.recode2.variants.uniq.sort.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/all.frequency.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/MGeND.recode2.norm2.vcf.gz > short-variant_tr.change2.combined6.snpeff.sort.annotate.vcf
 java -Xms10g -Xmx30g -jar ../snpEff/SnpSift.jar extractFields short-variant_tr.change2.combined6.snpeff.sort.annotate.vcf ANN[0].GENE ANN[0].IMPACT ANN[0].EFFECT ANN[0].HGVS_C ANN[0].HGVS_P > short-variant_tr.change2.combined6.snpeff.sort.annotate.extraFields.tsv
 
 R CMD BATCH ../script/vcfr.R
@@ -190,7 +190,7 @@ cut -d , -f 9 short-variant_tr.change2.combined6.snpeff.sort.annotate6.csv | awk
 paste -d , short-variant_tr.change2.combined6.snpeff.sort.annotate6.csv short-variant_tr.change2.combined6.snpeff.sort.annotate6.gene.csv > short-variant_tr.change2.combined6.snpeff.sort.annotate7.csv
 
 # 57を変更
-join -t "," --header -a 1 -1 57 -2 1 -e "." -o auto <(head -n +1 short-variant_tr.change2.combined6.snpeff.sort.annotate7.csv && tail -n +2 short-variant_tr.change2.combined6.snpeff.sort.annotate7.csv | sort -k 57,57 -t ',') ../database/cancerGeneList3.csv > short-variant_tr.change2.combined6.snpeff.sort.annotate8.csv
+join -t "," --header -a 1 -1 57 -2 1 -e "." -o auto <(head -n +1 short-variant_tr.change2.combined6.snpeff.sort.annotate7.csv && tail -n +2 short-variant_tr.change2.combined6.snpeff.sort.annotate7.csv | sort -k 57,57 -t ',') /mnt/c/database/cancerGeneList3.csv > short-variant_tr.change2.combined6.snpeff.sort.annotate8.csv
 (head -n +1 short-variant_tr.change2.combined6.snpeff.sort.annotate8.csv && tail -n +2 short-variant_tr.change2.combined6.snpeff.sort.annotate8.csv | sort -t ',' -k 13,13 -k 10,10) | cut -d , -f 2- > short-variant_tr.change2.combined6.snpeff.sort.annotate8.sort.csv
 
 

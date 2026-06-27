@@ -1,7 +1,7 @@
 
 
 # ファイル名の抽出と処理
-for file in ../database/clinvar_*.hg38.recode2.vcf.gz; do
+for file in /mnt/c/database/clinvar_*.hg38.recode2.vcf.gz; do
   # * の部分（数字列）を抽出
   date=$(basename $file | sed -E 's/clinvar_(.*)\.hg38.recode2\.vcf\.gz/\1/')
 
@@ -10,15 +10,15 @@ for file in ../database/clinvar_*.hg38.recode2.vcf.gz; do
     echo "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_${date}.vcf.gz が存在しません。ダウンロードを実行します。"
     # ダウンロードを実行
     latest_file=$(curl -s https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/ | grep -oP 'clinvar_\d+\.vcf\.gz' | sort -r | head -n 1)
-    wget -c "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/$latest_file" -P ../database
-    rm ../database/clinvar_${date}.hg38.recode2.vcf.gz ../database/clinvar_${date}.hg38.recode2.vcf.gz.tbi
+    wget -c "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/$latest_file" -P /mnt/c/database
+    rm /mnt/c/database/clinvar_${date}.hg38.recode2.vcf.gz /mnt/c/database/clinvar_${date}.hg38.recode2.vcf.gz.tbi
     
     filename_base=$(echo "$latest_file" | sed 's/\.vcf\.gz//')
-    vcftools --gzvcf ../database/$latest_file --recode --out ../database/$filename_base.hg38 --recode-INFO AF_ESP --recode-INFO AF_EXAC --recode-INFO AF_TGP --recode-INFO CLNSIG --recode-INFO CLNSIGCONF --recode-INFO SCI --recode-INFO ONC
-    sed '9,15d' ../database/$filename_base.hg38.recode.vcf | sed '11,22d' | sed '12,22d' | sed '13,14d' > ../database/$filename_base.hg38.recode2.vcf
-    bgzip -@ 24 ../database/$filename_base.hg38.recode2.vcf
-    tabix -p vcf ../database/$filename_base.hg38.recode2.vcf.gz
-    rm ../database/$filename_base.vcf.gz ../database/$filename_base.hg38.recode.vcf ../database/$filename_base.hg38.log
+    vcftools --gzvcf /mnt/c/database/$latest_file --recode --out /mnt/c/database/$filename_base.hg38 --recode-INFO AF_ESP --recode-INFO AF_EXAC --recode-INFO AF_TGP --recode-INFO CLNSIG --recode-INFO CLNSIGCONF --recode-INFO SCI --recode-INFO ONC
+    sed '9,15d' /mnt/c/database/$filename_base.hg38.recode.vcf | sed '11,22d' | sed '12,22d' | sed '13,14d' > /mnt/c/database/$filename_base.hg38.recode2.vcf
+    bgzip -@ 24 /mnt/c/database/$filename_base.hg38.recode2.vcf
+    tabix -p vcf /mnt/c/database/$filename_base.hg38.recode2.vcf.gz
+    rm /mnt/c/database/$filename_base.vcf.gz /mnt/c/database/$filename_base.hg38.recode.vcf /mnt/c/database/$filename_base.hg38.log
     
   else
     echo "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_${date}.vcf.gz は既に存在しています。"
@@ -93,7 +93,7 @@ jq -r '
 ' "$json_file" >> "$tsv_file"
 
 
-cat ../database/vcf_head3.tsv <(sed -e '1d' shortVariants.tsv | awk -F"\t" -v "OFS=\t" '{print "chr"$2,$3,".",$4,$5,".",".",".","GT:DP", "0|1:100"}') > shortVariants.vcf
+cat /mnt/c/database/vcf_head3.tsv <(sed -e '1d' shortVariants.tsv | awk -F"\t" -v "OFS=\t" '{print "chr"$2,$3,".",$4,$5,".",".",".","GT:DP", "0|1:100"}') > shortVariants.vcf
 
 cat shortVariants.vcf | awk '$1 ~ /^#/ {print $0;next} {print $0 | "sort -k1,1 -k2,2n"}' | uniq > shortVariants.sort.vcf
 
@@ -114,7 +114,7 @@ awk 'BEGIN {OFS="\t"}
 
 bgzip shortVariants.sort2.vcf
 tabix -p vcf shortVariants.sort2.vcf.gz
-bcftools norm -f /mnt/c/Users/Yusuke\ Kanemasa/Desktop/EPdata/database/hg38.fa -o shortVariants2.vcf shortVariants.sort2.vcf.gz -c s
+bcftools norm -f /mnt/c/database/hg38.fa -o shortVariants2.vcf shortVariants.sort2.vcf.gz -c s
 awk -F"\t" -v "OFS=\t" '{gsub("c","C",$4);gsub("g","G",$4);gsub("t","T",$4);gsub("a","A",$4);gsub("c","C",$5);gsub("g","G",$5);gsub("t","T",$5);gsub("a","A",$5);print $0}' shortVariants2.vcf > shortVariants3.vcf
 bgzip -d shortVariants.sort2.vcf.gz
 
@@ -125,22 +125,22 @@ java -jar ../snpEff/snpEff.jar -onlyTr shortVariants.refseq.tsv GRCh38.p13.RefSe
 
 cat shortVariants3.snpeff.vcf | awk '$1 ~ /^#/ {print $0;next} {print $0 | "sort -k1,1 -k2,2n"}' > shortVariants3.snpeff.sort.vcf
 
-java -Xms10g -Xmx30g -jar ../snpEff/SnpSift.jar annotate ../database/clinvar_*.hg38.recode2.vcf.gz shortVariants3.snpeff.sort.vcf | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-60kjpn-GRCh38-af.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-54kjpn-GRCh38-af.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-38kjpn-GRCh38-af.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-14kjpn-GRCh38-af.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.exomes.v4.1.sites.all.hg38.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.genomes.v4.1.sites.all.hg38.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/gem_j_wga.all.grch38.recode3.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/jga_snp.grch38.recode3.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/jga_wes.grch38.recode3.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/jga_wgs.recode2.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/ncbn.jpn.all.grch38.recode3.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/GCF_000001405.40.recode2.norm3.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/Cosmic_CompleteTargetedScreensMutant_Normal_v101_GRCh38.recode2.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/Cosmic_GenomeScreensMutant_Normal_v101_GRCh38.recode2.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/Cosmic_NonCodingVariants_Normal_v101_GRCh38.recode2.norm.vcf.gz > shortVariants3.snpeff.sort.annotate.vcf
+java -Xms10g -Xmx30g -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/clinvar_*.hg38.recode2.vcf.gz shortVariants3.snpeff.sort.vcf | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-60kjpn-GRCh38-af.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-54kjpn-GRCh38-af.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-38kjpn-GRCh38-af.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-14kjpn-GRCh38-af.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.exomes.v4.1.sites.all.hg38.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.genomes.v4.1.sites.all.hg38.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gem_j_wga.all.grch38.recode3.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/jga_snp.grch38.recode3.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/jga_wes.grch38.recode3.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/jga_wgs.recode2.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/ncbn.jpn.all.grch38.recode3.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/GCF_000001405.40.recode2.norm3.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/Cosmic_CompleteTargetedScreensMutant_Normal_v101_GRCh38.recode2.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/Cosmic_GenomeScreensMutant_Normal_v101_GRCh38.recode2.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/Cosmic_NonCodingVariants_Normal_v101_GRCh38.recode2.norm.vcf.gz > shortVariants3.snpeff.sort.annotate.vcf
 java -Xms10g -Xmx30g -jar ../snpEff/SnpSift.jar extractFields shortVariants3.snpeff.sort.annotate.vcf ANN[0].GENE ANN[0].IMPACT ANN[0].EFFECT ANN[0].HGVS_C ANN[0].HGVS_P > shortVariants3.snpeff.sort.annotate.extraFields.tsv
 
 R CMD BATCH ../script/vcfr_heme.R
@@ -150,11 +150,11 @@ paste -d "\t" shortVariants3.snpeff.sort.annotate.tr.tsv shortVariants3.snpeff.s
 
 awk -F"\t" -v "OFS=\t" '{print "chr"$2":"$3"_"$4"_"$5,$0}' shortVariants.tsv | tr "," "/" | tr "\t" "," > shortVariants.csv
 
-awk -F"," -v "OFS=," '{print $9":"$10"_"$11"_"$12,$0}' shortVariants3.snpeff.sort.annotate.csv > shortVariants3.snpeff.sort.annotate2.csv
+awk -F"," -v "OFS=," '{print $10":"$11"_"$12"_"$13,$0}' shortVariants3.snpeff.sort.annotate.csv > shortVariants3.snpeff.sort.annotate2.csv
 join -t "," --header -a 1 -1 1 -2 1 -e "." -o auto <(head -n +1 shortVariants.csv && tail -n +2 shortVariants.csv | sort -k 1,1 -t ',') <(head -n +1 shortVariants3.snpeff.sort.annotate2.csv && tail -n +2 shortVariants3.snpeff.sort.annotate2.csv | sort -k 1,1 -t ',' | uniq ) > shortVariants2.csv
 
 
-join -t "," --header -a 1 -1 11 -2 1 -e "." -o auto <(head -n +1 shortVariants2.csv && tail -n +2 shortVariants2.csv | sort -k 11,11 -t ',') /mnt/c/Users/Yusuke\ Kanemasa/Desktop/EPdata/database/cancerGeneList3.csv > shortVariants3.csv
+join -t "," --header -a 1 -1 11 -2 1 -e "." -o auto <(head -n +1 shortVariants2.csv && tail -n +2 shortVariants2.csv | sort -k 11,11 -t ',') /mnt/c/database/cancerGeneList3.csv > shortVariants3.csv
 
 (head -n +1 shortVariants3.csv && tail -n +2 shortVariants3.csv | sort -k 3,3 -t ',') > shortVariants4.csv
 

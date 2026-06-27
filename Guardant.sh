@@ -4,7 +4,7 @@ paste -d '\t' <(cut -f 2 SNV.csv) <(cut -f 3 SNV.csv) <(cut -f 4 SNV.csv | cut -
 paste -d '\t' <(cut -f 2 Indels.csv) <(cut -f 3 Indels.csv) <(cut -f 4 Indels.csv | cut -d '>' -f 1) <(cut -f 4 Indels.csv | cut -d '>' -f 2) <(cut -f 1 Indels.csv) <(cut -f 5,6,10,11,12 Indels.csv) <(cut -f 8,13,15 Indels.csv) | sed -e '1d' > annotation2.tsv
 
 cat annotation.tsv annotation2.tsv | awk -F"\t" -v "OFS=\t" '{print "chr"$1,$2,".",$3,$4,".",".",".","GT:DP", "0|1:100"}'  > annotation3.tsv
-cat /mnt/c/Users/Yusuke\ Kanemasa/Desktop/EPdata/database/vcf_head2.tsv annotation3.tsv > annotation.vcf
+cat /mnt/c/database/vcf_head2.tsv annotation3.tsv > annotation.vcf
 
 cut -f 10 annotation.tsv annotation2.tsv | cut -d '.' -f 1 > gene_list.txt
 
@@ -17,29 +17,29 @@ cut -f 4 annotation_NM.tr2.tsv > ENST_list.txt
 cat annotation.vcf | awk '$1 ~ /^#/ {print $0;next} {print $0 | "sort -k1,1 -k2,2n"}' > annotation_sort.vcf
 bgzip annotation_sort.vcf
 tabix -p vcf annotation_sort.vcf.gz
-bcftools norm -f /mnt/c/Users/Yusuke\ Kanemasa/Desktop/EPdata/database/hg19.fa -o annotation_sort.leftalign.vcf annotation_sort.vcf.gz
+bcftools norm -f /mnt/c/database/hg19.fa -o annotation_sort.leftalign.vcf annotation_sort.vcf.gz
 awk -F"\t" -v "OFS=\t" '{gsub("c","C",$4);gsub("g","G",$4);gsub("t","T",$4);gsub("a","A",$4);print $0}' annotation_sort.leftalign.vcf > annotation_sort.leftalign2.vcf
 
 
-java -jar /mnt/c/Users/Yusuke\ Kanemasa/Desktop/EPdata/snpEff/snpEff.jar -onlyTr ENST_list.txt GRCh37.87 annotation_sort.leftalign2.vcf > annotation.snpeff.vcf
+java -jar ../snpEff/snpEff.jar -onlyTr ENST_list.txt GRCh37.87 annotation_sort.leftalign2.vcf > annotation.snpeff.vcf
 cat annotation.snpeff.vcf | awk '$1 ~ /^#/ {print $0;next} {print $0 | "sort -k1,1 -k2,2n"}' > annotation.snpeff.sort.vcf
 
-java -Xms10g -Xmx30g -jar ../snpEff/SnpSift.jar annotate ../database/clinvar_*.hg19.recode2.vcf.gz annotation.snpeff.sort.vcf | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-54kjpn-GRCh37-af2.sort.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-38kjpn-GRCh37-af2.sort.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-14kjpn-GRCh37-af2.sort.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/tommo-8.3kjpn-20200831-af2.sort.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.exomes.r2.1.1.sites.recode2.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.genomes.r2.1.1.sites.all.recode2.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.genomes.v3.1.2.sites.all.recode2.hg19.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.exomes.v4.1.sites.all.recode2.hg19.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/gnomad.genomes.v4.1.sites.all.recode2.hg19.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/BBJ_RIKEN_TMM_20200309_all2.sort.norm.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/GCF_000001405.25.recode2.norm2.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/CosmicCodingMuts.normal.v99.recode2.variants.uniq.sort.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/CosmicNonCodingVariants.normal.v99.recode2.variants.uniq.sort.vcf.gz |
-java -jar ../snpEff/SnpSift.jar annotate ../database/all.frequency.norm.vcf.gz | 
-java -jar ../snpEff/SnpSift.jar annotate ../database/MGeND.recode2.norm2.vcf.gz > annotation.snpeff.sort.annotate.vcf
+java -Xms10g -Xmx30g -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/clinvar_*.hg19.recode2.vcf.gz annotation.snpeff.sort.vcf | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-54kjpn-GRCh37-af2.sort.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-38kjpn-GRCh37-af2.sort.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-14kjpn-GRCh37-af2.sort.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/tommo-8.3kjpn-20200831-af2.sort.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.exomes.r2.1.1.sites.recode2.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.genomes.r2.1.1.sites.all.recode2.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.genomes.v3.1.2.sites.all.recode2.hg19.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.exomes.v4.1.sites.all.recode2.hg19.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/gnomad.genomes.v4.1.sites.all.recode2.hg19.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/BBJ_RIKEN_TMM_20200309_all2.sort.norm.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/GCF_000001405.25.recode2.norm2.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/CosmicCodingMuts.normal.v99.recode2.variants.uniq.sort.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/CosmicNonCodingVariants.normal.v99.recode2.variants.uniq.sort.vcf.gz |
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/all.frequency.norm.vcf.gz | 
+java -jar ../snpEff/SnpSift.jar annotate /mnt/c/database/MGeND.recode2.norm2.vcf.gz > annotation.snpeff.sort.annotate.vcf
 java -Xms10g -Xmx30g -jar ../snpEff/SnpSift.jar extractFields annotation.snpeff.sort.annotate.vcf ANN[0].GENE ANN[0].IMPACT ANN[0].EFFECT ANN[0].HGVS_C ANN[0].HGVS_P > annotation.snpeff.sort.annotate.extraFields.tsv
 
 R CMD BATCH ../script/vcfr_Genmine.R
