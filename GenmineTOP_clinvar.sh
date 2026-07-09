@@ -111,14 +111,14 @@ tr -d \\r <shortVariants3.snpeff.sort.annotate.tsv> shortVariants3.snpeff.sort.a
 paste -d "\t" shortVariants3.snpeff.sort.annotate.tr.tsv shortVariants3.snpeff.sort.annotate.extraFields.tsv | tr "," "/" | tr "\t" "," > shortVariants3.snpeff.sort.annotate.csv
 
 cat /mnt/c/database/GeneMine.head.csv <(awk -F"\t" -v "OFS=," '{print $6"_"$5"_"$4,$2,$3,$7,$8,$9,$10,$11,$13,$1,$14}' Book5.tsv) > Book8.csv
-awk -F"," -v "OFS=," '{print $9":"$10"_"$11"_"$12,$0}' shortVariants3.snpeff.sort.annotate.csv > shortVariants3.snpeff.sort.annotate2.csv
+awk -F"," -v "OFS=," '{print $10":"$11"_"$12"_"$13,$0}' shortVariants3.snpeff.sort.annotate.csv > shortVariants3.snpeff.sort.annotate2.csv
 join --header -t "," -a 1 -1 1 -2 1 -e "." -o auto <(head -n +1 Book8.csv && tail -n +2 Book8.csv | sort -k 1,1 -t ',') <(head -n +1 shortVariants3.snpeff.sort.annotate2.csv && tail -n +2 shortVariants3.snpeff.sort.annotate2.csv | sort -k 1,1 -t ',') > annotation.snpeff.sort.annotate3.csv
 
 join -t "," --header -a 1 -1 4 -2 1 -e "." -o auto <(head -n +1 annotation.snpeff.sort.annotate3.csv && tail -n +2 annotation.snpeff.sort.annotate3.csv | sort -k 4,4 -t ',') /mnt/c/database/cancerGeneList3.csv > annotation.snpeff.sort.annotate4.csv
 
 
-# awk '/<values>/,/<\/values>/{if(/<item>/)print}' *.xml | sed -e 's/<item>//g' -e 's/<\/item>//g' | cut -f 7 > mutation_list.txt
-# R CMD BATCH ../script/signature.R
+awk '/<values>/,/<\/values>/{if(/<item>/)print}' *.xml | sed -e 's/<item>//g' -e 's/<\/item>//g' | cut -f 7 > mutation_list.txt
+R CMD BATCH ../script/signature.R
 
 
 rm Book.tsv Book2.tsv Book3.tsv Book5.tsv Book6.tsv Book7.tsv Book8.csv annotation_NM.tr.tsv annotation_NM.tr2.tsv annotation_NM.tsv shortVariants.sort.vcf shortVariants.sort2.vcf shortVariants.sort2.vcf.gz.tbi shortVariants.vcf shortVariants2.vcf shortVariants3.snpeff.sort.annotate.csv shortVariants3.snpeff.sort.annotate.extraFields.tsv shortVariants3.snpeff.sort.annotate.tr.tsv shortVariants3.snpeff.sort.annotate.tsv shortVariants3.snpeff.sort.annotate.vcf shortVariants3.snpeff.sort.annotate2.csv shortVariants3.snpeff.sort.vcf shortVariants3.snpeff.vcf shortVariants3.vcf vcfr_heme.Rout gene_list.txt annotation.snpeff.sort.annotate3.csv
