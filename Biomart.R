@@ -3,7 +3,11 @@ library(biomaRt)
 options(timeout = 50000)
 
 
-ensembl <- useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl", version=108)
+ensembl <- useEnsembl(
+  biomart = "genes",
+  dataset = "hsapiens_gene_ensembl",
+  mirror = "asia"
+)
 gene_list <- read.delim("gene_list.txt", header=F, sep='\t') %>% dplyr::distinct() %>% as.matrix() %>% as.character()
 results = getBM(attributes=c('hgnc_symbol', 'refseq_mrna', 'strand', 'ensembl_transcript_id', 'transcript_mane_select'), filters = 'refseq_mrna', values = gene_list, mart = ensembl)
 results <- results %>% group_by(refseq_mrna) %>% filter(n() == 1 | # 重複していない行はそのまま残す
